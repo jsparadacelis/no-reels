@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sin Reels</string>
+    <string name="descripcion_servicio">Detecta cuándo abres Reels dentro de la app de Instagram y te devuelve al inicio. Solo mira la pantalla de Instagram, no guarda ni envía nada.</string>
+</resources>
