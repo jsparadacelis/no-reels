@@ -1,6 +1,7 @@
 package com.sinreels;
 
 import android.app.Activity;
+import android.app.TimePickerDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
@@ -27,6 +28,10 @@ public class MainActivity extends Activity {
     private TextView diagnostico;
     private Switch modoDiagnostico;
     private EditText idsExtra;
+    private Switch horarioActivo;
+    private Button botonInicio;
+    private Button botonFin;
+    private TextView resumenHorario;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +59,32 @@ public class MainActivity extends Activity {
 
         contador = texto("", 15);
         col.addView(contador);
+
+        // ───── Horario ─────
+        TextView subHorario = texto("Horario", 19);
+        subHorario.setTypeface(Typeface.DEFAULT_BOLD);
+        col.addView(subHorario);
+
+        horarioActivo = new Switch(this);
+        horarioActivo.setText("Bloquear solo en este horario");
+        horarioActivo.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15);
+        horarioActivo.setPadding(0, dp(8), 0, dp(4));
+        horarioActivo.setOnCheckedChangeListener((b, on) -> {
+            Prefs.setHorarioActivo(this, on);
+            actualizarHorario();
+        });
+        col.addView(horarioActivo);
+
+        botonInicio = boton("");
+        botonInicio.setOnClickListener(v -> elegirHora(true));
+        col.addView(botonInicio);
+
+        botonFin = boton("");
+        botonFin.setOnClickListener(v -> elegirHora(false));
+        col.addView(botonFin);
+
+        resumenHorario = texto("", 14);
+        col.addView(resumenHorario);
 
         TextView sub = texto("Si deja de funcionar", 19);
         sub.setTypeface(Typeface.DEFAULT_BOLD);
@@ -110,6 +141,33 @@ public class MainActivity extends Activity {
         String ultima = Prefs.ultimaPantalla(this);
         diagnostico.setText(ultima.isEmpty() ? "(sin datos todavía)" : ultima);
         idsExtra.setText(Prefs.idsExtra(this));
+        horarioActivo.setChecked(Prefs.horarioActivo(this));
+        actualizarHorario();
+    }
+
+    private void elegirHora(boolean esInicio) {
+        int actual = esInicio ? Prefs.inicioMin(this) : Prefs.finMin(this);
+        new TimePickerDialog(this, (picker, h, m) -> {
+            if (esInicio) Prefs.setInicioMin(this, h * 60 + m);
+            else Prefs.setFinMin(this, h * 60 + m);
+            actualizarHorario();
+        }, actual / 60, actual % 60, true).show();
+    }
+
+    private void actualizarHorario() {
+        boolean on = Prefs.horarioActivo(this);
+        String ini = Prefs.hhmm(Prefs.inicioMin(this));
+        String fin = Prefs.hhmm(Prefs.finMin(this));
+        botonInicio.setText("Empieza a bloquear: " + ini);
+        botonFin.setText("Deja de bloquear: " + fin);
+        botonInicio.setEnabled(on);
+        botonFin.setEnabled(on);
+        if (!on) {
+            resumenHorario.setText("Reels bloqueado a todas horas.");
+        } else {
+            resumenHorario.setText("Reels bloqueado de " + ini + " a " + fin + ". Ahora mismo: "
+                    + (Prefs.tocaBloquearAhora(this) ? "🔒 bloqueado" : "🔓 permitido"));
+        }
     }
 
     private boolean servicioActivo() {

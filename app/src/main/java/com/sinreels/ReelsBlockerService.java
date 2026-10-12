@@ -49,6 +49,9 @@ public class ReelsBlockerService extends AccessibilityService {
             Prefs.setUltimaPantalla(this, volcarIds(raiz));
         }
 
+        // Fuera del horario de bloqueo, Reels está permitido
+        if (!Prefs.tocaBloquearAhora(this)) return;
+
         // Evita reaccionar varias veces seguidas mientras Instagram cambia de pantalla
         if (ahora - ultimaAccion < 800) return;
 
